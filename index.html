@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LeaveFlow — Leave Management System</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0f1117;
+      --paper: #f5f3ee;
+      --cream: #ede9e0;
+      --moss: #2d5a27;
+      --moss-light: #4a8a42;
+      --moss-pale: #e8f0e7;
+      --rust: #c0392b;
+      --rust-pale: #fdecea;
+      --gold: #c8a84b;
+      --gold-pale: #fdf6e3;
+      --slate: #6b7280;
+      --border: #d4cfc5;
+      --shadow: 0 2px 12px rgba(15,17,23,0.08);
+      --shadow-lg: 0 8px 32px rgba(15,17,23,0.12);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── AUTH SCREEN ── */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #auth-screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 70% 40%, #2d5a27 0%, transparent 60%),
+                  radial-gradient(ellipse 50% 50% at 20% 80%, #1a3a16 0%, transparent 50%);
+      opacity: 0.6;
+    }
+
+    #auth-screen::after {
+      content: 'LEAVEFLOW';
+      position: absolute;
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(80px, 15vw, 200px);
+      color: rgba(255,255,255,0.03);
+      letter-spacing: 0.1em;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .auth-card {
+      position: relative;
+      z-index: 2;
+      background: var(--paper);
+      border-radius: 4px;
+      padding: 48px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.05);
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .auth-logo svg { color: var(--moss); }
+
+    .auth-logo span {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 28px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--slate);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      color: var(--moss);
+      border-bottom-color: var(--moss);
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      background: white;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus { border-color: var(--moss); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn-primary {
+      background: var(--moss);
+      color: white;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-primary:hover { background: var(--moss-light); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-outline:hover { border-color: var(--ink); }
+
+    .btn-danger { background: var(--rust); color: white; }
+    .btn-danger:hover { background: #a93226; }
+    .btn-approve { background: var(--moss); color: white; }
+    .btn-approve:hover { background: var(--moss-light); }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+
+    .error-msg {
+      background: var(--rust-pale);
+      color: var(--rust);
+      border: 1px solid #f5c6c2;
+      border-radius: 4px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ── APP SHELL ── */
+    #app { display: none; min-height: 100vh; }
+
+    .navbar {
+      background: var(--ink);
+      color: white;
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-logo span { color: var(--moss-light); }
+
+    .nav-right { display: flex; align-items: center; gap: 20px; }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .nav-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--moss);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .role-badge {
+      background: var(--moss);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    .role-badge.manager { background: var(--gold); color: var(--ink); }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { background: rgba(255,255,255,0.1); }
+
+    /* ── MAIN LAYOUT ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      background: white;
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+    }
+
+    .sidebar-section {
+      padding: 0 16px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate);
+      padding: 8px 8px 6px;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--slate);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-item:hover { background: var(--cream); color: var(--ink); }
+    .sidebar-item.active { background: var(--moss-pale); color: var(--moss); }
+    .sidebar-item svg { flex-shrink: 0; }
+
+    /* ── CONTENT ── */
+    .content { padding: 32px; overflow-y: auto; }
+
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.2s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .page-subtitle { font-size: 14px; color: var(--slate); margin-top: 4px; }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .stat-card.green::after { background: var(--moss); }
+    .stat-card.red::after   { background: var(--rust); }
+    .stat-card.gold::after  { background: var(--gold); }
+    .stat-card.slate::after { background: var(--slate); }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label { font-size: 12px; color: var(--slate); font-weight: 500; }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header h3 { font-size: 15px; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th {
+      text-align: left;
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--slate);
+      background: var(--cream);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 13px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0ece4;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf9f6; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-pending  { background: var(--gold-pale);  color: #92620a; }
+    .status-approved { background: var(--moss-pale);  color: var(--moss); }
+    .status-rejected { background: var(--rust-pale);  color: var(--rust); }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,17,23,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(2px);
+      animation: fadeIn 0.15s ease;
+    }
+
+    .modal {
+      background: var(--paper);
+      border-radius: 4px;
+      padding: 36px;
+      width: 480px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.2s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--slate);
+      padding: 4px;
+      transition: color 0.15s;
+    }
+
+    .modal-close:hover { color: var(--ink); }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .leave-balance-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .balance-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+    }
+
+    .balance-type { font-size: 12px; color: var(--slate); font-weight: 500; }
+    .balance-days { font-family: 'DM Serif Display', serif; font-size: 24px; margin-top: 2px; }
+    .balance-used { font-size: 12px; color: var(--slate); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--slate);
+    }
+
+    .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--ink);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 9999;
+      animation: slideUp 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.success { border-left: 3px solid var(--moss-light); }
+    .toast.error   { border-left: 3px solid var(--rust); }
+
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { color: var(--slate); font-weight: 500; }
+
+    @media (max-width: 700px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .content { padding: 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+        <path d="M9 16l2 2 4-4"/>
+      </svg>
+      <span>LeaveFlow</span>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchTab('register')">Register</div>
+    </div>
+
+    <div id="auth-error" class="error-msg"></div>
+
+    <!-- LOGIN -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="you@company.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In
+      </button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register-form" style="display:none">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="John Doe"/>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="reg-email" placeholder="you@company.com"/>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" id="reg-dept" placeholder="Engineering, HR, Finance…"/>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="reg-role">
+          <option value="employee">Employee</option>
+          <option value="manager">Manager</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min 6 characters"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleRegister()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Create Account
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <nav class="navbar">
+    <div class="nav-logo">Leave<span>Flow</span></div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-avatar" id="nav-avatar">JD</div>
+        <div>
+          <div style="font-size:14px;font-weight:500" id="nav-name">John Doe</div>
+          <div style="font-size:11px;color:#9ca3af" id="nav-dept">Engineering</div>
+        </div>
+        <span class="role-badge" id="nav-role">Employee</span>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+    </div>
+  </nav>
+
+  <div class="main-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Menu</div>
+        <div class="sidebar-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="sidebar-item" id="nav-apply" onclick="showPage('apply')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          Apply Leave
+        </div>
+        <div class="sidebar-item" id="nav-my-leaves" onclick="showPage('my-leaves')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          My Leaves
+        </div>
+        <div class="sidebar-item" id="nav-manage" onclick="showPage('manage')" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Manage Requests
+          <span id="pending-count" style="background:var(--rust);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:auto;display:none"></span>
+        </div>
+        <div class="sidebar-item" id="nav-team" onclick="showPage('team')" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Team Calendar
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Good day, <span id="dash-name">there</span> 👋</div>
+            <div class="page-subtitle" id="dash-date"></div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div class="stat-num" id="stat-available">—</div>
+            <div class="stat-label">Days Available</div>
+          </div>
+          <div class="stat-card gold">
+            <div class="stat-num" id="stat-pending-my">—</div>
+            <div class="stat-label">Pending Requests</div>
+          </div>
+          <div class="stat-card slate">
+            <div class="stat-num" id="stat-taken">—</div>
+            <div class="stat-label">Days Taken</div>
+          </div>
+          <div class="stat-card red" id="manager-stat" style="display:none">
+            <div class="stat-num" id="stat-pending-all">—</div>
+            <div class="stat-label">Team Pending</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Recent Activity</h3>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th>
+            </tr></thead>
+            <tbody id="recent-table">
+              <tr><td colspan="5"><div class="empty-state"><p>No leave history yet</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- APPLY LEAVE -->
+      <div class="page" id="page-apply">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Apply for Leave</div>
+            <div class="page-subtitle">Submit a new leave request</div>
+          </div>
+        </div>
+
+        <div class="leave-balance-grid" id="balance-grid"></div>
+
+        <div style="background:white;border:1px solid var(--border);border-radius:4px;padding:28px;max-width:560px">
+          <div class="form-group">
+            <label>Leave Type</label>
+            <select id="apply-type">
+              <option value="Annual">Annual Leave</option>
+              <option value="Sick">Sick Leave</option>
+              <option value="Casual">Casual Leave</option>
+              <option value="Emergency">Emergency Leave</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group">
+              <label>From Date</label>
+              <input type="date" id="apply-from"/>
+            </div>
+            <div class="form-group">
+              <label>To Date</label>
+              <input type="date" id="apply-to"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Reason</label>
+            <textarea id="apply-reason" rows="4" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:14px;resize:vertical;outline:none" placeholder="Briefly describe the reason for your leave…"></textarea>
+          </div>
+          <div id="days-preview" style="margin-bottom:16px;padding:12px;background:var(--moss-pale);border-radius:4px;font-size:14px;color:var(--moss);font-weight:500;display:none"></div>
+          <button class="btn btn-primary" onclick="submitLeave()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Submit Application
+          </button>
+        </div>
+      </div>
+
+      <!-- MY LEAVES -->
+      <div class="page" id="page-my-leaves">
+        <div class="page-header">
+          <div>
+            <div class="page-title">My Leave History</div>
+            <div class="page-subtitle">All your leave applications</div>
+          </div>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr>
+              <th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="my-leaves-table">
+              <tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No leave applications found</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MANAGE (Manager only) -->
+      <div class="page" id="page-manage">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Manage Requests</div>
+            <div class="page-subtitle">Review and action team leave applications</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm filter-btn active" onclick="filterLeaves('all', this)">All</button>
+          <button class="btn btn-outline btn-sm filter-btn" onclick="filterLeaves('Pending', this)">Pending</button>
+          <button class="btn btn-outline btn-sm filter-btn" onclick="filterLeaves('Approved', this)">Approved</button>
+          <button class="btn btn-outline btn-sm filter-btn" onclick="filterLeaves('Rejected', this)">Rejected</button>
+        </div>
+
+        <div class="table-card">
+          <table>
+            <thead><tr>
+              <th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="manage-table">
+              <tr><td colspan="7"><div class="empty-state"><p>No requests found</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TEAM CALENDAR -->
+      <div class="page" id="page-team">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Team Calendar</div>
+            <div class="page-subtitle">Overview of approved team leaves</div>
+          </div>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead><tr>
+              <th>Employee</th><th>Department</th><th>Leave Type</th><th>From</th><th>To</th><th>Days</th>
+            </tr></thead>
+            <tbody id="team-table">
+              <tr><td colspan="6"><div class="empty-state"><p>No approved leaves to show</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detail-modal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Leave Details</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-content"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, orderBy, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── FIREBASE CONFIG ── Replace with your own config from Firebase Console
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Expose to global
+  window._auth = auth;
+  window._db   = db;
+  window._fns  = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, orderBy, serverTimestamp };
+
+  // ── AUTH STATE ──
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (snap.exists()) {
+        window._currentUser = { uid: user.uid, ...snap.data() };
+        initApp();
+      }
+    } else {
+      window._currentUser = null;
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+    }
+  });
+</script>
+
+<script>
+  // ───────────────── HELPERS ─────────────────
+  function showToast(msg, type='success') {
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  function calcDays(from, to) {
+    const d1 = new Date(from), d2 = new Date(to);
+    const diff = Math.round((d2 - d1) / 86400000) + 1;
+    return diff > 0 ? diff : 0;
+  }
+
+  function fmtDate(str) {
+    if (!str) return '—';
+    return new Date(str).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  function statusBadge(s) {
+    return `<span class="status-badge status-${s.toLowerCase()}"><span class="status-dot"></span>${s}</span>`;
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
+    document.getElementById('login-form').style.display    = tab === 'login'    ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+    document.getElementById('auth-error').style.display    = 'none';
+  }
+
+  // ───────────────── AUTH ─────────────────
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'none';
+    try {
+      await window._fns.signInWithEmailAndPassword(window._auth, email, pass);
+    } catch(e) {
+      errEl.textContent = 'Invalid email or password.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function handleRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const dept  = document.getElementById('reg-dept').value.trim();
+    const role  = document.getElementById('reg-role').value;
+    const pass  = document.getElementById('reg-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.style.display = 'none';
+
+    if (!name || !email || !dept || !pass) {
+      errEl.textContent = 'Please fill in all fields.';
+      errEl.style.display = 'block'; return;
+    }
+    try {
+      const cred = await window._fns.createUserWithEmailAndPassword(window._auth, email, pass);
+      await window._fns.setDoc(window._fns.doc(window._db, 'users', cred.user.uid), {
+        name, email, department: dept, role,
+        leaveBalance: { Annual: 18, Sick: 10, Casual: 6, Emergency: 3 },
+        createdAt: new Date().toISOString()
+      });
+      showToast('Account created! Welcome aboard.');
+    } catch(e) {
+      errEl.textContent = e.message;
+      errEl.style.display = 'block';
+    }
+  }
+
+  async function handleLogout() {
+    await window._fns.signOut(window._auth);
+  }
+
+  // ───────────────── APP INIT ─────────────────
+  function initApp() {
+    const u = window._currentUser;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    const initials = u.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('nav-avatar').textContent = initials;
+    document.getElementById('nav-name').textContent   = u.name;
+    document.getElementById('nav-dept').textContent   = u.department;
+    document.getElementById('dash-name').textContent  = u.name.split(' ')[0];
+    document.getElementById('nav-role').textContent   = u.role.charAt(0).toUpperCase() + u.role.slice(1);
+    if (u.role === 'manager') document.getElementById('nav-role').classList.add('manager');
+
+    document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+    // Set today as min date for leave apply
+    document.getElementById('apply-from').min = new Date().toISOString().split('T')[0];
+    document.getElementById('apply-to').min   = new Date().toISOString().split('T')[0];
+    document.getElementById('apply-from').addEventListener('change', updateDaysPreview);
+    document.getElementById('apply-to').addEventListener('change', updateDaysPreview);
+
+    if (u.role === 'manager') {
+      document.getElementById('nav-manage').style.display = 'flex';
+      document.getElementById('nav-team').style.display   = 'flex';
+      document.getElementById('manager-stat').style.display = 'block';
+    }
+
+    renderBalanceGrid();
+    loadDashboard();
+  }
+
+  function updateDaysPreview() {
+    const f = document.getElementById('apply-from').value;
+    const t = document.getElementById('apply-to').value;
+    const p = document.getElementById('days-preview');
+    if (f && t) {
+      const d = calcDays(f,t);
+      p.style.display = 'block';
+      p.textContent   = `📅 ${d} working day${d!==1?'s':''} requested`;
+    } else {
+      p.style.display = 'none';
+    }
+  }
+
+  function renderBalanceGrid() {
+    const bal = window._currentUser.leaveBalance || {};
+    const g   = document.getElementById('balance-grid');
+    g.innerHTML = Object.entries(bal).map(([type, days]) => `
+      <div class="balance-item">
+        <div class="balance-type">${type} Leave</div>
+        <div class="balance-days">${days}</div>
+        <div class="balance-used">days remaining</div>
+      </div>`).join('');
+  }
+
+  // ───────────────── DASHBOARD ─────────────────
+  async function loadDashboard() {
+    const { db, fns, user } = { db: window._db, fns: window._fns, user: window._currentUser };
+    const q = fns.query(fns.collection(db,'leaves'), fns.where('userId','==',user.uid), fns.orderBy('createdAt','desc'));
+    const snap = await fns.getDocs(q);
+    const leaves = snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    const bal    = user.leaveBalance || {};
+    const total  = Object.values(bal).reduce((a,b)=>a+b,0);
+    const taken  = leaves.filter(l=>l.status==='Approved').reduce((a,l)=>a+l.days,0);
+    const pending = leaves.filter(l=>l.status==='Pending').length;
+
+    document.getElementById('stat-available').textContent    = total;
+    document.getElementById('stat-pending-my').textContent   = pending;
+    document.getElementById('stat-taken').textContent        = taken;
+
+    if (user.role === 'manager') {
+      const allQ   = fns.query(fns.collection(db,'leaves'), fns.where('status','==','Pending'));
+      const allSnap = await fns.getDocs(allQ);
+      const pc = allSnap.size;
+      document.getElementById('stat-pending-all').textContent = pc;
+      const badge = document.getElementById('pending-count');
+      if (pc > 0) { badge.style.display='inline'; badge.textContent=pc; }
+    }
+
+    const tbody = document.getElementById('recent-table');
+    if (leaves.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>No leave history yet</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = leaves.slice(0,5).map(l=>`
+        <tr>
+          <td>${l.leaveType}</td>
+          <td>${fmtDate(l.fromDate)}</td>
+          <td>${fmtDate(l.toDate)}</td>
+          <td>${l.days}</td>
+          <td>${statusBadge(l.status)}</td>
+        </tr>`).join('');
+    }
+  }
+
+  // ───────────────── SUBMIT LEAVE ─────────────────
+  async function submitLeave() {
+    const type   = document.getElementById('apply-type').value;
+    const from   = document.getElementById('apply-from').value;
+    const to     = document.getElementById('apply-to').value;
+    const reason = document.getElementById('apply-reason').value.trim();
+
+    if (!from || !to || !reason) { showToast('Please fill in all fields.','error'); return; }
+    const days = calcDays(from, to);
+    if (days <= 0) { showToast('Invalid date range.','error'); return; }
+
+    const user = window._currentUser;
+    const bal  = user.leaveBalance[type] || 0;
+    if (days > bal) { showToast(`Insufficient ${type} leave balance (${bal} days left).`,'error'); return; }
+
+    try {
+      await window._fns.addDoc(window._fns.collection(window._db,'leaves'), {
+        userId:     user.uid,
+        userName:   user.name,
+        department: user.department,
+        leaveType:  type,
+        fromDate:   from,
+        toDate:     to,
+        days,
+        reason,
+        status:     'Pending',
+        createdAt:  window._fns.serverTimestamp()
+      });
+      showToast('Leave application submitted!');
+      document.getElementById('apply-from').value  = '';
+      document.getElementById('apply-to').value    = '';
+      document.getElementById('apply-reason').value = '';
+      document.getElementById('days-preview').style.display = 'none';
+      loadDashboard();
+      showPage('my-leaves');
+    } catch(e) {
+      showToast('Error submitting application.','error');
+      console.error(e);
+    }
+  }
+
+  // ───────────────── MY LEAVES ─────────────────
+  async function loadMyLeaves() {
+    const { db, fns, user } = { db: window._db, fns: window._fns, user: window._currentUser };
+    const q    = fns.query(fns.collection(db,'leaves'), fns.where('userId','==',user.uid), fns.orderBy('createdAt','desc'));
+    const snap = await fns.getDocs(q);
+    const leaves = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const tbody = document.getElementById('my-leaves-table');
+
+    if (!leaves.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No leave applications found</p></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = leaves.map(l=>`
+      <tr>
+        <td><strong>${l.leaveType}</strong></td>
+        <td>${fmtDate(l.fromDate)}</td>
+        <td>${fmtDate(l.toDate)}</td>
+        <td>${l.days}</td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.reason}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="viewDetail('${l.id}')">View</button></td>
+      </tr>`).join('');
+  }
+
+  // ───────────────── MANAGE (manager) ─────────────────
+  let _allLeaves = [];
+  let _filterStatus = 'all';
+
+  async function loadManage() {
+    const { db, fns } = { db: window._db, fns: window._fns };
+    const q    = fns.query(fns.collection(db,'leaves'), fns.orderBy('createdAt','desc'));
+    const snap = await fns.getDocs(q);
+    _allLeaves = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderManageTable(_allLeaves);
+  }
+
+  function renderManageTable(leaves) {
+    const filtered = _filterStatus === 'all' ? leaves : leaves.filter(l=>l.status===_filterStatus);
+    const tbody = document.getElementById('manage-table');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No requests found</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = filtered.map(l=>`
+      <tr>
+        <td><strong>${l.userName}</strong><br><span style="font-size:12px;color:var(--slate)">${l.department}</span></td>
+        <td>${l.leaveType}</td>
+        <td>${fmtDate(l.fromDate)}</td>
+        <td>${fmtDate(l.toDate)}</td>
+        <td>${l.days}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td style="display:flex;gap:6px;align-items:center">
+          ${l.status==='Pending'
+            ? `<button class="btn btn-approve btn-sm" onclick="actionLeave('${l.id}','Approved')">✓ Approve</button>
+               <button class="btn btn-danger btn-sm" onclick="actionLeave('${l.id}','Rejected')">✕ Reject</button>`
+            : `<button class="btn btn-outline btn-sm" onclick="viewDetail('${l.id}')">View</button>`}
+        </td>
+      </tr>`).join('');
+  }
+
+  function filterLeaves(status, btn) {
+    _filterStatus = status;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderManageTable(_allLeaves);
+  }
+
+  async function actionLeave(id, status) {
+    const { db, fns } = { db: window._db, fns: window._fns };
+    try {
+      await fns.updateDoc(fns.doc(db,'leaves',id), { status, reviewedAt: new Date().toISOString() });
+
+      if (status === 'Approved') {
+        // Deduct from employee balance
+        const leave = _allLeaves.find(l=>l.id===id);
+        if (leave) {
+          const uSnap = await fns.getDoc(fns.doc(db,'users',leave.userId));
+          if (uSnap.exists()) {
+            const bal = uSnap.data().leaveBalance || {};
+            bal[leave.leaveType] = Math.max(0, (bal[leave.leaveType]||0) - leave.days);
+            await fns.updateDoc(fns.doc(db,'users',leave.userId),{leaveBalance:bal});
+          }
+        }
+      }
+
+      showToast(`Leave ${status.toLowerCase()} successfully.`);
+      loadManage();
+      loadDashboard();
+    } catch(e) {
+      showToast('Error updating leave status.','error');
+    }
+  }
+
+  // ───────────────── TEAM CALENDAR ─────────────────
+  async function loadTeamCalendar() {
+    const { db, fns } = { db: window._db, fns: window._fns };
+    const q    = fns.query(fns.collection(db,'leaves'), fns.where('status','==','Approved'), fns.orderBy('fromDate','desc'));
+    const snap = await fns.getDocs(q);
+    const leaves = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const tbody = document.getElementById('team-table');
+
+    if (!leaves.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><p>No approved leaves to show</p></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = leaves.map(l=>`
+      <tr>
+        <td><strong>${l.userName}</strong></td>
+        <td>${l.department}</td>
+        <td>${l.leaveType}</td>
+        <td>${fmtDate(l.fromDate)}</td>
+        <td>${fmtDate(l.toDate)}</td>
+        <td>${l.days}</td>
+      </tr>`).join('');
+  }
+
+  // ───────────────── DETAIL MODAL ─────────────────
+  async function viewDetail(id) {
+    const { db, fns } = { db: window._db, fns: window._fns };
+    const snap = await fns.getDoc(fns.doc(db,'leaves',id));
+    if (!snap.exists()) return;
+    const l = { id: snap.id, ...snap.data() };
+
+    document.getElementById('modal-content').innerHTML = `
+      <div class="detail-row"><span class="detail-key">Employee</span><span>${l.userName}</span></div>
+      <div class="detail-row"><span class="detail-key">Department</span><span>${l.department}</span></div>
+      <div class="detail-row"><span class="detail-key">Leave Type</span><span>${l.leaveType}</span></div>
+      <div class="detail-row"><span class="detail-key">From</span><span>${fmtDate(l.fromDate)}</span></div>
+      <div class="detail-row"><span class="detail-key">To</span><span>${fmtDate(l.toDate)}</span></div>
+      <div class="detail-row"><span class="detail-key">Duration</span><span>${l.days} day${l.days!==1?'s':''}</span></div>
+      <div class="detail-row"><span class="detail-key">Reason</span><span>${l.reason}</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span>${statusBadge(l.status)}</div>
+      ${l.reviewedAt ? `<div class="detail-row"><span class="detail-key">Reviewed</span><span>${fmtDate(l.reviewedAt)}</span></div>` : ''}
+    `;
+
+    const actEl = document.getElementById('modal-actions');
+    actEl.innerHTML = '';
+    if (window._currentUser.role === 'manager' && l.status === 'Pending') {
+      actEl.innerHTML = `
+        <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        <button class="btn btn-danger" onclick="actionLeave('${l.id}','Rejected');closeModal()">Reject</button>
+        <button class="btn btn-approve" onclick="actionLeave('${l.id}','Approved');closeModal()">Approve</button>
+      `;
+    } else {
+      actEl.innerHTML = `<button class="btn btn-primary" onclick="closeModal()">Close</button>`;
+    }
+
+    document.getElementById('detail-modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('detail-modal').style.display = 'none';
+  }
+
+  // ───────────────── NAVIGATION ─────────────────
+  const pageLoaders = {
+    'dashboard':  loadDashboard,
+    'my-leaves':  loadMyLeaves,
+    'manage':     loadManage,
+    'team':       loadTeamCalendar
+  };
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+
+    const page = document.getElementById(`page-${name}`);
+    const nav  = document.getElementById(`nav-${name}`);
+    if (page) page.classList.add('active');
+    if (nav)  nav.classList.add('active');
+
+    if (pageLoaders[name]) pageLoaders[name]();
+  }
+</script>
+
+</body>
+</html>
